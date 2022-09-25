@@ -1,0 +1,129 @@
+/**For this project, I created SKY Catering Database.
+I made up different situations to write as many queries as possible**/
+
+CREATE TABLE CATERING_TYPE
+(TYPE_CODE CHAR(10) PRIMARY KEY,
+TYPE_DESC CHAR(30),
+TYPE_PRICE DECIMAL(7,2));
+
+INSERT INTO CATERING_TYPE
+VALUES ('T01','Wedding','30.99'),
+	('T02','Corporate','20.99'),
+	('T03','Social Event','22.99');
+
+CREATE TABLE CUSTOMER_1
+(CUSTOMER_ID CHAR(10) PRIMARY KEY,
+CUS_FNAME CHAR(15),
+CUS_LNAME CHAR(15),
+CUS_PHONE CHAR(15),
+TYPE_CODE CHAR(10),
+FOREIGN KEY (TYPE_CODE) REFERENCES CATERING_TYPE (TYPE_CODE));
+
+INSERT INTO CUSTOMER_1
+VALUES ('C01','Anna','Swans','703-231-5439','T01'),
+	('C02','Elsa','Nguyen','703-211-5320','T02'),
+	('C03','Lisa','Tran','571-221-6755','T03');
+INSERT ('C03','Lisa','Tran','571-221-6755','T03')
+
+CREATE TABLE SERVICE
+(SERVICE_CODE CHAR(10) PRIMARY KEY,
+SERVICE_DESC CHAR(30));
+
+INSERT INTO SERVICE
+VALUES ('SV111','Preparation'),
+	('SV112','Delivery'),
+	('SV113','Cleaning');
+
+CREATE TABLE TYPE_SERVICE
+(TYPE_CODE CHAR(10),
+SERVICE_CODE CHAR(10),
+LICENSE CHAR(30),
+FOREIGN KEY (TYPE_CODE) REFERENCES CATERING_TYPE(TYPE_CODE), 
+FOREIGN KEY (SERVICE_CODE)  REFERENCES SERVICE (SERVICE_CODE),
+PRIMARY KEY (TYPE_CODE, SERVICE_CODE));
+
+INSERT INTO TYPE_SERVICE
+VALUES ('T01','SV111','Food Establishment License'),
+	('T02','SV112','Alcohol License'),
+	('T03','SV113','Cleaning License');
+
+CREATE TABLE STAFF
+(STAFF_ID CHAR(10) PRIMARY KEY,
+STAFF_FNAME CHAR(15),
+STAFF_LNAME CHAR(15),
+STAFF_PHONE CHAR(15),
+STAFF_SSN CHAR(10),
+SERVICE_CODE CHAR(10),
+FOREIGN KEY (SERVICE_CODE) REFERENCES SERVICE (SERVICE_CODE));
+
+INSERT INTO STAFF
+VALUES ('S101','Becky','Lam','703-523-4899','82-7656-233','SV111'),
+	('S102','Duyen','Tran','571-545-8835','85-3221-234','SV112'),
+	('S103','Trang','Nguyen','571-545-3355','82-4354-545','SV113');
+
+
+/**This query is to join 2 tables CATERING_TYPE and CUSTOMER_1 together. The query will show
+CUSTOMER_ID, CUS_LNAME, CUS_FNAME only when TYPE_PRICE*100 greater than $2500 (which means that
+supposed there is a customer wants to order the service to serve for a 100-people event) and when
+TYPE_PRICE is equal to a value 20.99.**/
+
+SELECT CUSTOMER_ID, CUS_LNAME, CUS_FNAME
+FROM CATERING_TYPE CT, CUSTOMER_1 T
+WHERE T.TYPE_CODE = CT.TYPE_CODE
+AND ((TYPE_PRICE*100) > 2500 OR TYPE_PRICE IN (20.99));
+
+/**This query will show CUS_LNAME, CUS_PHONE, TYPE_CODE when TYPE_PRICE*95/100 is less than 
+$20.00 (this means that supposed when a customer gets a 5% discount for the service) and when
+LICENSE has ‘Alco’ pattern. The query is retrieved based on three tables CATERING_TYPE, CUSTOMER_1 and TYPE_SERVICE**/
+
+SELECT CUS_LNAME, CUS_PHONE, CT.TYPE_CODE
+FROM CUSTOMER_1 C, TYPE_SERVICE TS, CATERING_TYPE CT
+WHERE CT.TYPE_CODE = C.TYPE_CODE
+AND CT.TYPE_CODE = TS.TYPE_CODE
+AND ((TYPE_PRICE*95/100) < 20.00
+AND LICENSE LIKE 'Alco%');
+
+/**This query is to show STAFF_ID, STAPP_LNAME, and STAFF_SSN all from table STAFF only
+when SERVICE_CODE based on the result of another condition is that STAFF_PHONE is 703-523-4899.**/
+
+SELECT STAFF_ID, STAFF_LNAME, STAFF_SSN
+FROM STAFF
+WHERE SERVICE_CODE IN 
+(SELECT SERVICE_CODE FROM STAFF WHERE STAFF_PHONE ='703-523-4899');
+
+/**This query will show TYPE_DESC, SUM(TYPE_PRICE) as an aggregate function retrieved
+from CATERING_TYPE table. The condition for the query is when TYPE_CODE is T01 and group
+by type description and sum of type_price greater than $25.99**/
+
+SELECT TYPE_DESC, SUM(TYPE_PRICE)
+FROM CATERING_TYPE
+WHERE TYPE_CODE = 'T01'
+GROUP BY TYPE_DESC
+HAVING SUM(TYPE_PRICE) > 25.99;
+
+/**This query is based on 2 tables SERVICE and TYPE_SERVICE. It will show SERVICE_CODE 
+and SERVICE_DESC only when SERVICE_DESC is either ‘Delivery’ or ‘Cleaning’**/
+
+SELECT S.SERVICE_CODE, SERVICE_DESC
+FROM SERVICE S, TYPE_SERVICE TS
+WHERE S.SERVICE_CODE = TS.SERVICE_CODE
+AND SERVICE_DESC IN 
+(SELECT SERVICE_DESC FROM SERVICE WHERE SERVICE_DESC IN ('Delivery','Cleaning'));
+
+/**This query is to show CUS_FNAME, CUS_LNAME, TYPE_DESC that retrieved from a joined table
+from 2 tables CUSTOMER_1 and CATERING_TYPE. The conditions are TYPE_PRICE in the range of 
+25.00 and 40.00 or CUS_LNAME is ‘Tran’ or TYPE_CODE is ‘T03’**/
+
+SELECT CUS_FNAME, CUS_PHONE, CT.TYPE_DESC
+FROM CATERING_TYPE CT, CUSTOMER_1 C
+WHERE CT.TYPE_CODE = C.TYPE_CODE
+AND (TYPE_PRICE BETWEEN 25.00 AND 40.00
+OR CUS_LNAME = 'Tran'
+OR C.TYPE_CODE IN ('T03'));
+
+
+
+
+
+
+
